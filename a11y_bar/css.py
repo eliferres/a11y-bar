@@ -359,12 +359,16 @@ def is_bold(weight: Optional[str]) -> bool:
 
 
 def background_color(decls: Dict[str, str]) -> Optional[str]:
-    """The background colour a rule sets, or None. A gradient or image has no
-    single colour to measure against, so it reads as unknown."""
+    """The background a rule paints: a colour value, "image" for a gradient
+    or picture (no single colour to measure against), or None when the rule
+    sets no background."""
+    image = (decls.get("background-image") or "none").strip().lower()
+    shorthand = decls.get("background")
+    if image != "none" or (shorthand and re.search(r"gradient\(|url\(", shorthand, re.I)):
+        return "image"
     if "background-color" in decls:
         return decls["background-color"]
-    shorthand = decls.get("background")
-    if shorthand is None or "gradient(" in shorthand.lower() or "url(" in shorthand.lower():
+    if shorthand is None:
         return None
     tok = re.search(r"var\([^)]*\)|#[0-9a-fA-F]{3,8}|rgba?\([^)]*\)|[a-z]+", shorthand)
     return tok.group(0) if tok else None

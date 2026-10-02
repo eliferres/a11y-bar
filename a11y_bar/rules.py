@@ -148,7 +148,7 @@ def check_contrast_inherited(path: str, markup: Markup, rules: List[Rule], varia
         fg = parse_color(nearest(lambda d: d.get("color")), variables)
         if not fg:
             continue
-        bg = parse_color(nearest(background_color), variables)
+        bg = backdrop(chain, levels, cascaded, variables)
         if not bg or bg[3] < 1.0:
             continue
         raw_size = next((d.get("font-size") or _heading_size(chain[i]) for d, i in
@@ -207,6 +207,28 @@ def removed_outline(rule: Rule) -> Optional[str]:
                 return None
             return value
     return None
+
+
+CANVAS = (255, 255, 255, 1.0)
+
+
+def backdrop(chain: List[Element], levels: range,
+             cascaded: Callable[[List[Element], int], Tuple[Dict[str, str], List[str]]],
+             variables: Dict[str, str]) -> Optional[Tuple[int, int, int, float]]:
+    """The background behind an element's text: the nearest ancestor-or-self
+    that paints one, walking past transparent layers, and the white canvas a
+    browser shows when nothing paints. None when that layer is an image or a
+    colour this read cannot resolve."""
+    for i in levels:
+        raw = background_color(cascaded(chain, i)[0])
+        if raw is None:
+            continue
+        value = raw.strip().lower()
+        colour = parse_color(value, variables)
+        if value in ("transparent", "none") or (colour is not None and colour[3] == 0):
+            continue
+        return colour
+    return CANVAS
 
 
 def _heading_size(el: Element) -> Optional[str]:

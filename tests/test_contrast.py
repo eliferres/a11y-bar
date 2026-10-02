@@ -60,6 +60,17 @@ class TestInheritedPair(unittest.TestCase):
         self.assertEqual(contrast("inherited-deep"),
                          [("inherited-deep.html", 2, "span.lede (inherited): 2.32:1 on 16px text, needs 4.5:1")])
 
+    def test_with_no_background_anywhere_the_canvas_is_white(self) -> None:
+        self.assertEqual(contrast("no-background"),
+                         [("no-background.html", 2, "p.t (inherited): 1.92:1 on 16px text, needs 4.5:1")])
+
+    def test_a_transparent_wrapper_lets_the_walk_reach_the_painted_ancestor(self) -> None:
+        self.assertEqual(contrast("transparent-wrapper"),
+                         [("transparent-wrapper.html", 2, "p.t (inherited): 2.85:1 on 16px text, needs 4.5:1")])
+
+    def test_a_background_image_is_not_seen_through(self) -> None:
+        self.assertEqual(contrast("image-background"), [])
+
     def test_text_a_browser_never_paints_is_never_judged(self) -> None:
         self.assertEqual(contrast("script-text"), [])
 
