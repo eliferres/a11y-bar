@@ -531,7 +531,7 @@ def mask_jsx(text: str) -> str:
 
     Inside a tag, a brace expression such as onClick={() => go(a, b)} carries
     a `>` that would end the tag early and spaces that would split it into
-    stray attributes. Those characters are replaced with underscores inside
+    stray attributes. Those characters are replaced with "_" inside
     tag-level braces only, at the same length and with newlines kept, so line
     numbers still match the source. Children expressions outside tags are
     left alone, so an <img> inside {items.map(...)} is still seen.
