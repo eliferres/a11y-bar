@@ -191,10 +191,14 @@ def _paints(prop: str, value: str) -> bool:
     return not any(tok in NOT_PAINTED for tok in v.split())
 
 
+FOCUS_STATE = re.compile(r":focus(-visible)?(?![\w-])")
+
+
 def draws_focus_ring(rule: Rule) -> bool:
-    """A rule that targets :focus-visible (outside any :not()) and draws a
-    visible outline, box-shadow or border there."""
-    if not any(":focus-visible" in NOT_CLAUSE.sub("", one) for one in rule.selector.split(",")):
+    """A rule that targets :focus or :focus-visible (outside any :not()) and
+    draws a visible outline, box-shadow or border there. WCAG 2.4.7 accepts
+    either state; :focus-visible only spares pointer users the ring."""
+    if not any(FOCUS_STATE.search(NOT_CLAUSE.sub("", one)) for one in rule.selector.split(",")):
         return False
     return any(_paints(prop, value) for prop, value in rule.decls.items()
                if prop in ("outline", "outline-style", "box-shadow") or prop.startswith("border"))
@@ -440,7 +444,7 @@ def scan(css_files: List[Source], markup_files: List[Source],
                 outline = removed_outline(r)
                 if outline and paints_at_desktop(r, variables):
                     add("focus-visible", shown, r.line,
-                        "%s sets outline: %s and no :focus-visible rule replaces it" % (r.selector, outline))
+                        "%s sets outline: %s and no :focus or :focus-visible rule draws a ring" % (r.selector, outline))
 
     for shown, el in interactive:
         keys = {el.tag} | {"." + c for c in el.classes}

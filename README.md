@@ -30,7 +30,7 @@ demo/broken/index.html:13: [alt] <img> has no alt text
 demo/broken/index.html:16: [touch-target] button is 20px tall on a phone, needs 24px
 demo/broken/index.html:16: [focus-order] <button tabindex="2"> moves it ahead of the document order
 demo/broken/style.css:10: [reduced-motion] CSS animates and no @media (prefers-reduced-motion: reduce) block exists
-demo/broken/style.css:13: [focus-visible] button:focus sets outline: none and no :focus-visible rule replaces it
+demo/broken/style.css:13: [focus-visible] button:focus sets outline: none and no :focus or :focus-visible rule draws a ring
 FAIL: 6 finding(s), 2 file(s) read, 6 rules
 ```
 
@@ -41,7 +41,7 @@ FAIL: 6 finding(s), 2 file(s) read, 6 rules
 | Rule | What it catches | WCAG 2.2 |
 |---|---|---|
 | `contrast` | Text must have a contrast ratio of at least 4.5:1 against its background, or 3:1 for large text (24px, or 18.67px bold) | 1.4.3 Contrast (Minimum), AA |
-| `focus-visible` | A stylesheet that removes the focus outline (`outline: none` or `outline: 0`) must draw a replacement ring in a `:focus-visible` rule (outline, box-shadow or border) | 2.4.7 Focus Visible, AA |
+| `focus-visible` | A stylesheet that removes the focus outline (`outline: none` or `outline: 0`) must draw a replacement ring (outline, box-shadow or border) in a `:focus` or `:focus-visible` rule | 2.4.7 Focus Visible, AA |
 | `touch-target` | Buttons, inputs and links styled as buttons (an `<a>` with a class containing `btn` or `pill`) must be at least 24px tall on a phone; a button, checkbox or radio whose size the page never sets is exempt, as WCAG allows for user-agent sizing | 2.5.8 Target Size (Minimum), AA |
 | `reduced-motion` | Stylesheets with a transition or animation longer than zero must include a `prefers-reduced-motion` media query (`reduce` to turn motion off, or `no-preference` to turn it on) | 2.3.3 Animation from Interactions, AAA |
 | `focus-order` | Elements should not have a `tabindex` greater than zero | 2.4.3 Focus Order, A |
@@ -103,7 +103,7 @@ a11y-bar complements a browser audit; it does not replace one. Run axe-core or L
 - **Overlapping elements.** Text over an image, a sticky header that covers the focused control (WCAG 2.4.11 Focus Not Obscured), and anything decided by z-order or layout need a rendered page.
 - **Non-text contrast.** Only text contrast is measured. The 3:1 contrast of input borders, icons and focus rings (WCAG 1.4.11) is not.
 - **Target size is height only.** Width and the spacing exception in 2.5.8 are not evaluated, and a `vw` length is resolved at 1280px even in the phone pass.
-- **Presence, not quality.** `focus-visible` asks whether a ring-drawing `:focus-visible` rule exists, not whether it reaches every control whose outline was removed, and a page that removes the outline and draws its ring with `:focus` alone is reported even though WCAG 2.4.7 accepts it; `reduced-motion` asks whether a reduce block exists, not whether it covers each animation; `alt="image"` passes.
+- **Presence, not quality.** `focus-visible` asks whether a ring-drawing focus rule exists, not whether it reaches every control whose outline was removed; `reduced-motion` asks whether a `prefers-reduced-motion` query exists, not whether it covers each animation; `alt="image"` passes.
 - **Colour names.** Hex, `rgb()`, `rgba()` and `var()` references to them are read; of the named colours only `white` and `black` are.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) to report a wrong finding or propose a rule. MIT licensed, see [LICENSE](LICENSE).

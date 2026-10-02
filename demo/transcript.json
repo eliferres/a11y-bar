@@ -1,7 +1,7 @@
 [
   {
     "cmd": "python3 -m a11y_bar demo/broken; echo \"exit $?\"",
-    "out": "demo/broken/index.html:11: [contrast] p.note (inherited): 2.81:1 on 16px text, needs 4.5:1\ndemo/broken/index.html:13: [alt] <img> has no alt text\ndemo/broken/index.html:16: [touch-target] button is 20px tall on a phone, needs 24px\ndemo/broken/index.html:16: [focus-order] <button tabindex=\"2\"> moves it ahead of the document order\ndemo/broken/style.css:10: [reduced-motion] CSS animates and no @media (prefers-reduced-motion: reduce) block exists\ndemo/broken/style.css:13: [focus-visible] button:focus sets outline: none and no :focus-visible rule replaces it\nFAIL: 6 finding(s), 2 file(s) read, 6 rules\nexit 1",
+    "out": "demo/broken/index.html:11: [contrast] p.note (inherited): 2.81:1 on 16px text, needs 4.5:1\ndemo/broken/index.html:13: [alt] <img> has no alt text\ndemo/broken/index.html:16: [touch-target] button is 20px tall on a phone, needs 24px\ndemo/broken/index.html:16: [focus-order] <button tabindex=\"2\"> moves it ahead of the document order\ndemo/broken/style.css:10: [reduced-motion] CSS animates and no @media (prefers-reduced-motion: reduce) block exists\ndemo/broken/style.css:13: [focus-visible] button:focus sets outline: none and no :focus or :focus-visible rule draws a ring\nFAIL: 6 finding(s), 2 file(s) read, 6 rules\nexit 1",
     "status": 0
   },
   {
