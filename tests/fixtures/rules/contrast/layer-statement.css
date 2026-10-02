@@ -1,0 +1,2 @@
+@layer components;
+@media (max-width:359px){ .q{color:#999999;background:#ffffff;font-size:16px} }
