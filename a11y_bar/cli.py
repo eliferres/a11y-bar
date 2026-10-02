@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 from typing import List, Optional, Tuple
@@ -98,8 +99,8 @@ def _positive_px(value: str) -> float:
         number = float(value)
     except ValueError:
         raise argparse.ArgumentTypeError("not a number: %r" % value)
-    if number <= 0:
-        raise argparse.ArgumentTypeError("must be greater than 0: %r" % value)
+    if not math.isfinite(number) or number <= 0:
+        raise argparse.ArgumentTypeError("must be a finite number greater than 0: %r" % value)
     return number
 
 

@@ -48,7 +48,7 @@ class TestExitCodes(unittest.TestCase):
         self.assertIn("not a .css, .html, .htm, .jsx or .tsx file", r.stderr)
 
     def test_a_bad_min_target_is_one_line_and_exit_2(self) -> None:
-        for value in ("abc", "0", "-4"):
+        for value in ("abc", "0", "-4", "nan", "inf", "-inf"):
             with self.subTest(value=value):
                 r = run("clean", "--min-target", value)
                 self.assertEqual(r.returncode, 2)
