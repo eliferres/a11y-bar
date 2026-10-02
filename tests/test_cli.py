@@ -10,9 +10,9 @@ from pathlib import Path
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def run(*args: str) -> subprocess.CompletedProcess:
+def run(*args: str, cwd: Path = FIXTURES) -> subprocess.CompletedProcess:
     """Run the tool from the fixtures folder so reported paths are short."""
-    return subprocess.run([sys.executable, "-m", "a11y_bar", *args], cwd=str(FIXTURES),
+    return subprocess.run([sys.executable, "-m", "a11y_bar", *args], cwd=str(cwd),
                           capture_output=True, text=True,
                           env={"PYTHONPATH": str(FIXTURES.parent.parent), "PATH": ""})
 
@@ -93,6 +93,10 @@ class TestWhatIsRead(unittest.TestCase):
         r = run("project-clean")
         self.assertEqual(r.returncode, 0, r.stdout)
         self.assertEqual(r.stdout, "PASS: 0 finding(s), 3 file(s) read, 6 rules\n")
+
+    def test_with_no_path_the_current_directory_is_checked(self) -> None:
+        r = run(cwd=FIXTURES / "clean")
+        self.assertEqual((r.returncode, r.stdout), (0, "PASS: 0 finding(s), 2 file(s) read, 6 rules\n"))
 
     def test_explicit_files_are_read_once_each(self) -> None:
         r = run("clean/index.html", "clean/style.css", "clean")
