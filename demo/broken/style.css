@@ -1,0 +1,12 @@
+body { background: #ffffff; color: #1a1a1a; font-size: 16px; }
+
+/* contrast: #9a9a9a on white is 2.81:1, body text needs 4.5:1 */
+.note { color: #9a9a9a; }
+
+/* touch-target: 20px is under the 24px minimum */
+button { height: 20px; }
+
+/* reduced-motion: motion with no prefers-reduced-motion fallback */
+.panel { transition: opacity 250ms ease-out; }
+
+/* focus-visible: no :focus-visible rule anywhere in this file */

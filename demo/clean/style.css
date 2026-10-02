@@ -1,0 +1,13 @@
+body { background: #ffffff; color: #1a1a1a; font-size: 16px; }
+
+.note { color: #595959; }
+
+button { min-height: 44px; }
+
+:focus-visible { outline: 2px solid #1a1a1a; outline-offset: 2px; }
+
+.panel { transition: opacity 250ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .panel { transition: none; }
+}
