@@ -9,7 +9,7 @@ All notable changes to this project are documented in this file. The format is b
 - `a11y-bar` command that checks a web project's CSS and HTML, JSX and TSX files for six WCAG 2.2 rules without a browser.
 - `contrast` rule (1.4.3): text contrast from rules that set both colours, and from colours and backgrounds inherited through the page's element tree.
 - `focus-visible` rule (2.4.7): a focus outline removed with no `:focus` or `:focus-visible` rule drawing a replacement ring.
-- `touch-target` rule (2.5.8): buttons, inputs and button-styled links shorter than 24px as a 375px phone renders them, with unstyled buttons, checkboxes and radios exempt.
+- `touch-target` rule (2.5.8): buttons, inputs and button-styled links shorter than 24px as a 375px phone renders them, with unstyled buttons and inputs exempt.
 - `reduced-motion` rule (2.3.3): CSS with a transition or animation longer than zero, including durations set through custom properties, and no `prefers-reduced-motion` media query.
 - `focus-order` rule (2.4.3): any `tabindex` greater than zero, in HTML or JSX.
 - `alt` rule (1.1.1): images and image buttons with no text alternative, and videos with no accessible name.

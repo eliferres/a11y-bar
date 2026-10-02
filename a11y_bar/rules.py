@@ -306,9 +306,8 @@ def interactive_elements(markup: Markup) -> List[Element]:
 
 
 def _user_agent_sized(el: Element) -> bool:
-    """A button, checkbox or radio whose size the page never sets."""
-    kind = (literal(el.attrs.get("type")) or "").lower()
-    return el.tag == "button" or (el.tag == "input" and kind in ("checkbox", "radio", "button", "submit", "reset"))
+    """A button or input whose size the page never sets."""
+    return el.tag in ("button", "input")
 
 
 def selector_keys(selector: str) -> Optional[Set[str]]:

@@ -56,6 +56,9 @@ class TestUserAgentException(unittest.TestCase):
         self.assertEqual(target("native-controls"), [])
 
 
+    def test_unstyled_text_and_range_inputs_are_exempt(self) -> None:
+        self.assertEqual(target("native-inputs"), [])
+
 class TestPhoneViewport(unittest.TestCase):
     """A size raised only for phones counts; one raised only where a phone
     never renders does not."""
