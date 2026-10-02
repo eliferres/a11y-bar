@@ -1,11 +1,16 @@
 """The command line: what it reads, how it reports, and its exit codes."""
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import subprocess
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
+
+import a11y_bar
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -48,6 +53,23 @@ class TestExitCodes(unittest.TestCase):
                 r = run("clean", "--min-target", value)
                 self.assertEqual(r.returncode, 2)
                 self.assertEqual(len(r.stderr.splitlines()), 1, r.stderr)
+
+    def test_markup_the_parser_rejects_never_ends_in_a_traceback(self) -> None:
+        # Python 3.9's parser raises on this; later versions read past it.
+        r = run("broken-markup")
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertIn(r.returncode, (0, 2))
+        if r.returncode == 2:
+            self.assertEqual(len(r.stderr.splitlines()), 1)
+            self.assertTrue(r.stderr.startswith("a11y-bar: cannot parse broken-markup/index.html: "))
+
+    def test_a_parser_failure_is_one_line_naming_the_file_and_exit_2(self) -> None:
+        err = io.StringIO()
+        with mock.patch("a11y_bar.markup.Markup.feed", side_effect=AssertionError("unreadable")), \
+                contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as stop:
+            a11y_bar.main([str(FIXTURES / "clean")])
+        self.assertEqual(stop.exception.code, 2)
+        self.assertRegex(err.getvalue(), r"^a11y-bar: cannot parse .*index\.html: unreadable\n$")
 
     def test_version_prints_the_command_name_and_version(self) -> None:
         r = run("--version")

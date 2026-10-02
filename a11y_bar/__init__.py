@@ -17,12 +17,12 @@ __version__ = "0.1.0"
 from .colour import contrast_ratio, luminance, over, parse_color  # noqa: E402
 from .css import (DESKTOP_PX, PHONE_PX, Rule, css_rules, media_applies_at_desktop,  # noqa: E402
                   media_covers_phone, px, root_variables, strip_comments, width_edges)
-from .markup import Element, Markup, literal, mask_jsx, parse_markup  # noqa: E402
+from .markup import Element, Markup, MarkupError, literal, mask_jsx, parse_markup  # noqa: E402
 from .rules import DEFAULT_MIN_TARGET, RULES, Finding, Source, scan  # noqa: E402
 from .cli import UsageError, collect, main  # noqa: E402
 
 __all__ = [
-    "DEFAULT_MIN_TARGET", "DESKTOP_PX", "Element", "Finding", "Markup", "PHONE_PX", "RULES", "Rule",
+    "DEFAULT_MIN_TARGET", "DESKTOP_PX", "Element", "Finding", "Markup", "MarkupError", "PHONE_PX", "RULES", "Rule",
     "Source", "UsageError", "collect", "contrast_ratio", "css_rules", "literal", "luminance", "main",
     "mask_jsx", "media_applies_at_desktop", "media_covers_phone", "over", "parse_color", "parse_markup",
     "px", "root_variables", "scan", "strip_comments", "width_edges",

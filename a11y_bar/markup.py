@@ -33,6 +33,10 @@ class Element:
         return self.tag + "".join(".%s" % c for c in sorted(self.classes))
 
 
+class MarkupError(ValueError):
+    """A file the HTML parser could not read."""
+
+
 class Markup(HTMLParser):
     """The element tree of one file, the text each element carries directly
     (painted text only), and its <style> blocks with their starting lines."""
@@ -53,6 +57,11 @@ class Markup(HTMLParser):
             self._style_line = self.getpos()[0]
         if push and tag not in VOID_TAGS:
             self.stack.append(el)
+
+    def error(self, message: str) -> None:
+        """Python 3.9's parser base calls this on markup it cannot read and
+        raises NotImplementedError when a subclass does not define it."""
+        raise MarkupError(message)
 
     def handle_starttag(self, tag: str, attrs: list) -> None:
         self._open(tag, attrs, push=True)
@@ -120,8 +129,11 @@ def parse_markup(path: str, text: str) -> Markup:
     if os.path.splitext(path)[1].lower() in (".jsx", ".tsx"):
         text = mask_jsx(text)
     parser = Markup()
-    parser.feed(text)
-    parser.close()
+    try:
+        parser.feed(text)
+        parser.close()
+    except Exception as e:   # the parser's own failure modes vary by Python version
+        raise MarkupError("cannot parse %s: %s" % (path, e)) from e
     return parser
 
 

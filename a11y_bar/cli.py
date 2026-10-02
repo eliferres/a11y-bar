@@ -8,7 +8,7 @@ import sys
 from typing import List, Optional, Tuple
 
 from . import __version__
-from .markup import parse_markup, style_blocks
+from .markup import MarkupError, parse_markup, style_blocks
 from .rules import DEFAULT_MIN_TARGET, RULES, Finding, Source, _read, scan
 
 
@@ -147,7 +147,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         css, markup = collect(args.paths)
         check_scope(css, markup, args.paths)
         findings = scan(css, markup, args.min_target)
-    except (UsageError, OSError) as e:
+    except (UsageError, OSError, MarkupError) as e:
         print("a11y-bar: %s" % e, file=sys.stderr)
         sys.exit(2)
     shown = [s.shown for s in css + markup]
