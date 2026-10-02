@@ -69,6 +69,12 @@ class TestFocusVisible(unittest.TestCase):
     def test_a_ring_drawn_with_focus_counts_as_wcag_accepts_it(self) -> None:
         self.assertEqual(check("focus", "focus-ring", "focus-visible"), [])
 
+    def test_a_ring_shown_only_without_focus_visible_is_no_keyboard_ring(self) -> None:
+        self.assertEqual(check("focus", "ring-for-pointer-only", "focus-visible"), [
+            ("ring-for-pointer-only.css", 1,
+             "button sets outline: none and no :focus or :focus-visible rule draws a ring"),
+        ])
+
     def test_a_ring_in_a_style_block_counts_beside_a_stylesheet(self) -> None:
         self.assertEqual(check("focus", "ring-in-style-block", "focus-visible"), [])
 

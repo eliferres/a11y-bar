@@ -198,8 +198,9 @@ def draws_focus_ring(rule: Rule) -> bool:
     """A rule that targets :focus or :focus-visible (outside any :not()) and
     draws a visible outline, box-shadow or border there. WCAG 2.4.7 accepts
     either state; :focus-visible only spares pointer users the ring."""
-    if not any(FOCUS_STATE.search(NOT_CLAUSE.sub("", one)) for one in rule.selector.split(",")):
-        return False
+    if not any(FOCUS_STATE.search(NOT_CLAUSE.sub("", one)) and ":not(:focus-visible)" not in one.replace(" ", "")
+               for one in rule.selector.split(",")):
+        return False                          # :not(:focus-visible) draws for the pointer, never the keyboard
     return any(_paints(prop, value) for prop, value in rule.decls.items()
                if prop in ("outline", "outline-style", "box-shadow") or prop.startswith("border"))
 
