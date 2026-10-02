@@ -18,7 +18,7 @@ import os
 import re
 import sys
 from html.parser import HTMLParser
-from typing import Callable, Dict, List, NamedTuple, Optional, Set, Tuple
+from typing import Callable, Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 __version__ = "0.1.0"
 
@@ -296,7 +296,10 @@ MEDIA_TOUCH = re.compile(r"\(\s*(?:(?:any-)?hover\s*:\s*none|(?:any-)?pointer\s*
 MEDIA_FINE = re.compile(r"\(\s*(?:(?:any-)?hover\s*:\s*hover|(?:any-)?pointer\s*:\s*fine)\s*\)")
 
 
-def width_edges(part: str, variables: Optional[Dict[str, str]] = None):
+Edges = Union[None, str, Tuple[Optional[float], Optional[float]]]
+
+
+def width_edges(part: str, variables: Optional[Dict[str, str]] = None) -> Edges:
     """(min, max) for one width condition, None when the part is not a width
     condition, or "unresolved" when it is one whose edge cannot be read."""
     m = MEDIA_WIDTH.fullmatch(part)
