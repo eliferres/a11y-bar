@@ -59,7 +59,10 @@ def css_rules(text: str, first_line: int = 1) -> List[Rule]:
             for d in text[i + 1:end].split(";"):
                 if ":" in d:
                     k, _, v = d.partition(":")
-                    decls[k.strip().lower()] = v.strip()
+                    prop, value = k.strip().lower(), v.strip()
+                    decls[prop] = value
+                    if prop == "font":
+                        decls["font-size"], decls["font-weight"] = font_shorthand(value)
             if prelude:
                 line = first_line + text.count("\n", 0, i)
                 out.append(Rule(prelude, decls, line, " | ".join(stack)))
@@ -74,6 +77,27 @@ def css_rules(text: str, first_line: int = 1) -> List[Rule]:
         buf.append(ch)
         i += 1
     return out
+
+
+FONT_KEYWORDS = {"normal", "italic", "oblique", "small-caps", "ultra-condensed", "extra-condensed",
+                 "condensed", "semi-condensed", "semi-expanded", "expanded", "extra-expanded",
+                 "ultra-expanded"}
+
+
+def font_shorthand(value: str) -> Tuple[str, str]:
+    """(font-size, font-weight) set by a `font` shorthand. The size is the
+    first token after the style, variant, weight and stretch keywords, with
+    any /line-height cut off; a shorthand this cannot read (a system font
+    keyword, a var()) yields that token, which no length reading resolves,
+    so the element is skipped rather than measured at a guessed size."""
+    weight = "normal"
+    for token in value.split():
+        t = token.lower()
+        if t in ("bold", "bolder", "lighter") or re.fullmatch(r"[1-9]00", t):
+            weight = t
+        elif t not in FONT_KEYWORDS:
+            return t.split("/")[0], weight
+    return value, weight
 
 
 def root_variables(rules: List[Rule]) -> Dict[str, str]:

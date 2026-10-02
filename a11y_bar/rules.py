@@ -8,7 +8,8 @@ from typing import Callable, Dict, List, NamedTuple, Optional, Set, Tuple
 from .colour import contrast_ratio, over, parse_color
 from .css import (Rule, background_color, css_rules, font_size_and_weight, is_bold, paints_at_desktop,
                   paints_on_phone, px, root_variables, strip_comments)
-from .markup import Element, Markup, literal, parse_markup, parse_selector, selector_matches, style_blocks
+from .markup import (Element, Markup, could_match, literal, may_match, parse_markup, parse_selector,
+                     selector_matches, style_blocks)
 
 # rule id -> (WCAG 2.2 success criterion, what it catches)
 RULES: Dict[str, Tuple[str, str]] = {
@@ -23,6 +24,10 @@ RULES: Dict[str, Tuple[str, str]] = {
 LARGE_PX = 24.0          # 18pt
 LARGE_BOLD_PX = 18.67    # 14pt bold
 DEFAULT_MIN_TARGET = 24.0
+# Browser default heading sizes in px; every heading is bold by default.
+HEADING_PX = {"h1": 32.0, "h2": 24.0, "h3": 18.72, "h4": 16.0, "h5": 13.28, "h6": 10.72}
+# Properties whose unknown value could change a contrast verdict.
+CONTRAST_PROPS = ("color", "background", "background-color", "font", "font-size", "font-weight")
 
 
 class Finding(NamedTuple):
@@ -58,11 +63,28 @@ def check_contrast_pairs(path: str, rules: List[Rule], variables: Dict[str, str]
         if not fg or not bg or bg[3] < 1.0:   # a translucent background has no known backdrop
             continue
         size, bold = font_size_and_weight(r.decls, variables)
+        heading = _heading_default(r.selector)
+        if heading is not None and "font-size" not in r.decls:
+            size = heading
+        if heading is not None and "font-weight" not in r.decls:
+            bold = True
         need = required_ratio(size, bold)
         ratio = contrast_ratio(over(fg, bg[:3]), bg[:3])
         if ratio + 0.005 < need:
             reported.add(r.selector)
             add("contrast", path, r.line, "%s: %s" % (r.selector, _contrast_message(ratio, size, bold, need)))
+
+
+def _heading_default(selector: str) -> Optional[float]:
+    """The smallest browser default size among the headings a selector
+    targets, or None when any part of it targets something else."""
+    sizes = []
+    for one in selector.split(","):
+        tag = re.match(r"(h[1-6])(?![\w-])", re.split(r"[\s>+~]+", one.strip())[-1])
+        if not tag:
+            return None
+        sizes.append(HEADING_PX[tag.group(1)])
+    return min(sizes)
 
 
 def check_contrast_inherited(path: str, markup: Markup, rules: List[Rule], variables: Dict[str, str],
@@ -78,6 +100,7 @@ def check_contrast_inherited(path: str, markup: Markup, rules: List[Rule], varia
     translucent or unreadable.
     """
     prepared = []
+    unreadable = []                                  # what a selector we cannot evaluate may match
     for order, r in enumerate(rules):
         if not paints_at_desktop(r, variables):
             continue
@@ -87,6 +110,10 @@ def check_contrast_inherited(path: str, markup: Markup, rules: List[Rule], varia
                 spec = (sum(len(c[2]) for c in compounds), sum(len(c[1]) for c in compounds),
                         sum(1 for c in compounds if c[0]))
                 prepared.append((spec, order, compounds, one.strip(), r.decls))
+            elif any(p in r.decls for p in CONTRAST_PROPS):
+                compound = may_match(one)
+                if compound is not None:
+                    unreadable.append(compound)
     cache: Dict[int, Tuple[Dict[str, str], List[str]]] = {}
 
     def cascaded(chain: List[Element], upto: int) -> Tuple[Dict[str, str], List[str]]:
@@ -111,6 +138,8 @@ def check_contrast_inherited(path: str, markup: Markup, rules: List[Rule], varia
             node = node.parent
         chain.reverse()
         levels = range(len(chain) - 1, -1, -1)       # the element first, then outward
+        if any(_inline_style_could_paint(n) or any(could_match(c, n) for c in unreadable) for n in chain):
+            continue                                  # something this read cannot evaluate may set it
 
         def nearest(read: Callable[[Dict[str, str]], Optional[str]]) -> Optional[str]:
             """The first value `read` finds on the element or its nearest ancestor."""
@@ -122,11 +151,15 @@ def check_contrast_inherited(path: str, markup: Markup, rules: List[Rule], varia
         bg = parse_color(nearest(background_color), variables)
         if not bg or bg[3] < 1.0:
             continue
-        raw_size = nearest(lambda d: d.get("font-size"))
+        raw_size = next((d.get("font-size") or _heading_size(chain[i]) for d, i in
+                         ((cascaded(chain, i)[0], i) for i in levels)
+                         if d.get("font-size") or chain[i].tag in HEADING_PX), None)
         size = 16.0 if raw_size is None else px(raw_size, variables)
         if size is None:
             continue                                  # 2em, 150%, runtime: unknown, never 16px
-        bold = is_bold(nearest(lambda d: d.get("font-weight")))
+        bold = is_bold(next((d.get("font-weight") or "bold" for d, i in
+                             ((cascaded(chain, i)[0], i) for i in levels)
+                             if d.get("font-weight") or chain[i].tag in HEADING_PX), None))
         if any(s in reported for s in cascaded(chain, len(chain) - 1)[1]):
             continue                                  # the first pass already reported this rule
         need = required_ratio(size, bold)
@@ -176,6 +209,15 @@ def removed_outline(rule: Rule) -> Optional[str]:
     return None
 
 
+def _heading_size(el: Element) -> Optional[str]:
+    return "%gpx" % HEADING_PX[el.tag] if el.tag in HEADING_PX else None
+
+
+def _inline_style_could_paint(el: Element) -> bool:
+    style = (el.attrs.get("style") or "").lower()
+    return any(p in style for p in ("color", "background", "font"))
+
+
 def check_focus_order(path: str, markup: Markup, add: AddFn) -> None:
     for el in markup.elements:
         value = literal(el.attrs.get("tabindex"))
@@ -214,6 +256,12 @@ def interactive_elements(markup: Markup) -> List[Element]:
         elif el.tag == "a" and any(re.search(r"btn|pill", c, re.I) for c in el.classes):
             found.append(el)
     return found
+
+
+def _user_agent_sized(el: Element) -> bool:
+    """A button, checkbox or radio whose size the page never sets."""
+    kind = (literal(el.attrs.get("type")) or "").lower()
+    return el.tag == "button" or (el.tag == "input" and kind in ("checkbox", "radio", "button", "submit", "reset"))
 
 
 def selector_keys(selector: str) -> Optional[Set[str]]:
@@ -329,10 +377,6 @@ def scan(css_files: List[Source], markup_files: List[Source],
 
     has_ring = any(draws_focus_ring(r) for _s, rules, _t, _f in sheet_rules for r in rules)
     if not has_ring:
-        if interactive:
-            shown, el = interactive[0]
-            add("focus-visible", shown, el.line,
-                "%d interactive element(s) and no :focus-visible rule in the CSS" % len(interactive))
         for shown, rules, _text, _first in sheet_rules:
             for r in rules:
                 outline = removed_outline(r)
@@ -343,6 +387,8 @@ def scan(css_files: List[Source], markup_files: List[Source],
     for shown, el in interactive:
         keys = {el.tag} | {"." + c for c in el.classes}
         height = target_height(keys, all_rules, variables)
+        if height is None and _user_agent_sized(el):
+            continue                                  # WCAG 2.5.8 user-agent exception
         if height is None or height < min_target:
             got = "has no height set" if height is None else "is %.0fpx tall" % height
             add("touch-target", shown, el.line,

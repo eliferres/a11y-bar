@@ -51,6 +51,11 @@ class TestHeight(unittest.TestCase):
         self.assertEqual(target("style-variable", 44.0), [])
 
 
+class TestUserAgentException(unittest.TestCase):
+    def test_unstyled_checkboxes_radios_and_buttons_are_exempt(self) -> None:
+        self.assertEqual(target("native-controls"), [])
+
+
 class TestPhoneViewport(unittest.TestCase):
     """A size raised only for phones counts; one raised only where a phone
     never renders does not."""

@@ -27,10 +27,10 @@ python3 -m a11y_bar demo/broken
 ```text
 demo/broken/index.html:11: [contrast] p.note (inherited): 2.81:1 on 16px text, needs 4.5:1
 demo/broken/index.html:13: [alt] <img> has no alt text
-demo/broken/index.html:16: [focus-visible] 1 interactive element(s) and no :focus-visible rule in the CSS
 demo/broken/index.html:16: [touch-target] button is 20px tall on a phone, needs 24px
 demo/broken/index.html:16: [focus-order] <button tabindex="2"> moves it ahead of the document order
 demo/broken/style.css:10: [reduced-motion] CSS animates and no @media (prefers-reduced-motion: reduce) block exists
+demo/broken/style.css:13: [focus-visible] button:focus sets outline: none and no :focus-visible rule replaces it
 FAIL: 6 finding(s), 2 file(s) read, 6 rules
 ```
 
@@ -41,8 +41,8 @@ FAIL: 6 finding(s), 2 file(s) read, 6 rules
 | Rule | What it catches | WCAG 2.2 |
 |---|---|---|
 | `contrast` | Text must have a contrast ratio of at least 4.5:1 against its background, or 3:1 for large text (24px, or 18.67px bold) | 1.4.3 Contrast (Minimum), AA |
-| `focus-visible` | A page with buttons, inputs or button-styled links must have a `:focus-visible` rule, and must not remove the outline with `outline: none` or `outline: 0` unless such a rule replaces it | 2.4.7 Focus Visible, AA |
-| `touch-target` | Buttons, inputs and links styled as buttons (an `<a>` with a class containing `btn` or `pill`) must be at least 24px tall on a phone | 2.5.8 Target Size (Minimum), AA |
+| `focus-visible` | A stylesheet that removes the focus outline (`outline: none` or `outline: 0`) must draw a replacement ring in a `:focus-visible` rule (outline, box-shadow or border) | 2.4.7 Focus Visible, AA |
+| `touch-target` | Buttons, inputs and links styled as buttons (an `<a>` with a class containing `btn` or `pill`) must be at least 24px tall on a phone; a button, checkbox or radio whose size the page never sets is exempt, as WCAG allows for user-agent sizing | 2.5.8 Target Size (Minimum), AA |
 | `reduced-motion` | Stylesheets with a transition or animation must include a `@media (prefers-reduced-motion: reduce)` block | 2.3.3 Animation from Interactions, AAA |
 | `focus-order` | Elements should not have a `tabindex` greater than zero | 2.4.3 Focus Order, A |
 | `alt` | Images must have alternate text (`alt`, `aria-label`, `aria-labelledby`, `title`, or a presentation role); videos must have an accessible name or be `aria-hidden` | 1.1.1 Non-text Content, A |
@@ -92,18 +92,18 @@ In CI:
 
 **A parser, not a text search.** Markup goes through Python's HTML parser. JSX attribute expressions are masked first, at the same length and with newlines kept, so `onClick={() => a > b}` does not end the tag early and line numbers still match the source. Images inside a `{items.map(...)}` child expression are still read, and a `<style>` tag quoted inside a JavaScript string is not mistaken for CSS.
 
-**A missed finding over a false one.** Anything the tool cannot read is skipped: a selector with a child combinator or a pseudo-class, a font size in `em` or `%`, a colour from `color-mix()`, a translucent or gradient background, a `tabIndex` set from a variable. The cost of a gap is a finding not made, never a false one that teaches a team to ignore the report.
+**A missed finding over a false one.** Anything the tool cannot read is skipped, never guessed at. Text is not judged when a selector it cannot evaluate (a child or sibling combinator, `:not()`, an attribute matcher) or an inline `style` could set its colour, background or font, nor when its size is in `em` or `%`, its colour comes from `color-mix()`, or its background is translucent or a gradient. A `tabIndex` set from a variable is skipped too. Headings are measured at the browser's default size and weight unless the CSS sets them, and the `font` shorthand is read for both. The cost of a gap is a finding not made, never a false one that teaches a team to ignore the report.
 
 ## Limitations
 
 a11y-bar complements a browser audit; it does not replace one. Run axe-core or Lighthouse against the rendered pages as well. What a static check cannot decide:
 
-- **The computed cascade.** Only class, id, tag and descendant selectors are matched. Child and sibling combinators, pseudo-classes, attribute selectors, `!important`, inline `style` attributes and CSS-in-JS are not applied, so a colour or size set that way is never seen.
+- **The computed cascade.** Only class, id, tag and descendant selectors are matched. Text that a child or sibling combinator, a pseudo-class, an attribute selector or an inline `style` could restyle is skipped rather than measured, so a page written mostly in such selectors gets few contrast checks. `!important` and CSS-in-JS are not read.
 - **The runtime DOM.** Classes added by JavaScript, conditionally rendered components and `className` expressions are invisible. The inherited contrast pass runs on HTML pages only; JSX and TSX files are read for the markup rules.
 - **Overlapping elements.** Text over an image, a sticky header that covers the focused control (WCAG 2.4.11 Focus Not Obscured), and anything decided by z-order or layout need a rendered page.
 - **Non-text contrast.** Only text contrast is measured. The 3:1 contrast of input borders, icons and focus rings (WCAG 1.4.11) is not.
 - **Target size is height only.** Width and the spacing exception in 2.5.8 are not evaluated, and a `vw` length is resolved at 1280px even in the phone pass.
-- **Presence, not quality.** `focus-visible` asks whether a `:focus-visible` rule exists, not whether every control gets a visible ring, and a page that draws its ring with `:focus` alone is reported even though WCAG 2.4.7 accepts it; `reduced-motion` asks whether a reduce block exists, not whether it covers each animation; `alt="image"` passes.
+- **Presence, not quality.** `focus-visible` asks whether a ring-drawing `:focus-visible` rule exists, not whether it reaches every control whose outline was removed, and a page that removes the outline and draws its ring with `:focus` alone is reported even though WCAG 2.4.7 accepts it; `reduced-motion` asks whether a reduce block exists, not whether it covers each animation; `alt="image"` passes.
 - **Colour names.** Hex, `rgb()`, `rgba()` and `var()` references to them are read; of the named colours only `white` and `black` are.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) to report a wrong finding or propose a rule. MIT licensed, see [LICENSE](LICENSE).

@@ -107,8 +107,8 @@ class TestWhatIsRead(unittest.TestCase):
         r = run("inline-nofocus")
         self.assertEqual(r.returncode, 1)
         self.assertEqual(r.stdout.splitlines()[0],
-                         "inline-nofocus/index.html:1: [focus-visible] 1 interactive element(s) "
-                         "and no :focus-visible rule in the CSS")
+                         "inline-nofocus/index.html:1: [focus-visible] button sets outline: none "
+                         "and no :focus-visible rule replaces it")
         self.assertEqual(len(r.stdout.splitlines()), 2)
 
 

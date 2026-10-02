@@ -1,0 +1,5 @@
+body{background:#ffffff}
+p{color:#999999}
+.card > p{color:#111111}
+li{color:#999999}
+li:first-child{color:#111111}

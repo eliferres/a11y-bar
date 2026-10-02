@@ -35,11 +35,13 @@ class TestFocusOrder(unittest.TestCase):
 
 
 class TestFocusVisible(unittest.TestCase):
-    def test_no_ring_and_a_removed_outline_both_fail(self) -> None:
+    def test_a_removed_outline_with_no_ring_fails(self) -> None:
         self.assertEqual(check("focus", "no-ring", "focus-visible"), [
             ("no-ring.css", 2, ".x sets outline: none and no :focus-visible rule replaces it"),
-            ("no-ring.html", 1, "1 interactive element(s) and no :focus-visible rule in the CSS"),
         ])
+
+    def test_a_page_that_never_removes_the_outline_keeps_the_default_ring(self) -> None:
+        self.assertEqual(check("focus", "default-ring", "focus-visible"), [])
 
     def test_a_removed_outline_passes_when_a_focus_visible_rule_exists(self) -> None:
         self.assertEqual(check("focus", "ring", "focus-visible"), [])

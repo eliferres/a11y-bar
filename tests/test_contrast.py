@@ -76,6 +76,26 @@ class TestInheritedPair(unittest.TestCase):
         self.assertEqual(contrast("gradient-background"), [])
 
 
+class TestWhatTheToolCannotKnow(unittest.TestCase):
+    """Never report what a file-level read cannot know."""
+
+    def test_headings_use_the_browser_default_size_and_weight(self) -> None:
+        self.assertEqual(contrast("heading-default"), [])
+
+    def test_the_font_shorthand_sets_size_and_weight(self) -> None:
+        self.assertEqual(contrast("font-shorthand"), [])
+
+    def test_an_inline_style_on_the_element_or_an_ancestor_skips_it(self) -> None:
+        self.assertEqual(contrast("inline-style"), [])
+
+    def test_a_selector_the_tool_cannot_evaluate_skips_what_it_may_match(self) -> None:
+        self.assertEqual(contrast("unreadable-selector"), [])
+
+    def test_root_is_read_as_html_and_state_rules_do_not_skip(self) -> None:
+        self.assertEqual(contrast("root-colours"),
+                         [("root-colours.html", 2, "p.t (inherited): 2.85:1 on 16px text, needs 4.5:1")])
+
+
 class TestDesktopViewport(unittest.TestCase):
     """Contrast is judged at a 1280px desktop: a rule inside a @media that
     does not hold there never decides the verdict."""

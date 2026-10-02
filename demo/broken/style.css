@@ -9,4 +9,5 @@ button { height: 20px; }
 /* reduced-motion: motion with no prefers-reduced-motion fallback */
 .panel { transition: opacity 250ms ease-out; }
 
-/* focus-visible: no :focus-visible rule anywhere in this file */
+/* focus-visible: the outline is removed and no :focus-visible rule replaces it */
+button:focus { outline: none; }

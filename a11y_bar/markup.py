@@ -170,8 +170,9 @@ def compound_parts(token: str) -> Optional[Compound]:
 
 
 def parse_selector(selector: str) -> Optional[List[Compound]]:
-    """The compounds of a selector joined only by descendant combinators."""
-    parts = selector.split()
+    """The compounds of a selector joined only by descendant combinators.
+    :root is the html element."""
+    parts = ROOT.sub("html", selector).split()
     compounds = [compound_parts(p) for p in parts]
     if not compounds or any(c is None for c in compounds):
         return None
@@ -195,3 +196,31 @@ def selector_matches(compounds: List[Compound], chain: List[Element]) -> bool:
             return False
         j -= 1
     return True
+
+
+ROOT = re.compile(r":root\b")
+# Rules for another state or a generated box do not paint the resting text.
+NOT_RESTING = re.compile(r"::|:(hover|focus|focus-visible|focus-within|active|visited|checked|disabled|"
+                         r"target|invalid|placeholder-shown)\b|:(before|after|selection|placeholder)\b")
+FUNCTIONAL_PSEUDO = re.compile(r":[\w-]+\((?:[^()]|\([^()]*\))*\)")
+
+
+def may_match(selector: str) -> Optional[Compound]:
+    """For a selector parse_selector cannot evaluate, what an element must
+    at least carry to be matched by it: the tag, classes and ids left in its
+    last compound once combinators, pseudo-classes and attribute matchers are
+    set aside. None when the selector targets another state or a pseudo
+    element and so never paints the resting text."""
+    selector = ROOT.sub("html", selector.strip())
+    if NOT_RESTING.search(selector):
+        return None
+    last = re.split(r"\s*[>+~]\s*|\s+", selector)[-1]
+    last = FUNCTIONAL_PSEUDO.sub("", last)
+    last = re.sub(r"\[[^\]]*\]|:[\w-]+|\*", "", last)
+    tag = re.match(r"[a-zA-Z][a-zA-Z0-9-]*", last)
+    return (tag.group(0).lower() if tag else None,
+            set(re.findall(r"\.([A-Za-z0-9_-]+)", last)), set(re.findall(r"#([A-Za-z0-9_-]+)", last)))
+
+
+def could_match(compound: Compound, el: Element) -> bool:
+    return _compound_matches(compound, el)
