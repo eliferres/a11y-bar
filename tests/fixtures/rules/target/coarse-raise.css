@@ -1,0 +1,2 @@
+.btn-small{height:20px}
+@media (pointer: coarse){.btn-small{min-height:24px}}
