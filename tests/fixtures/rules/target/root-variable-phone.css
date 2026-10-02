@@ -1,0 +1,3 @@
+:root{--tap:20px}
+@media (max-width:600px){:root{--tap:44px}}
+.btn{height:var(--tap)}

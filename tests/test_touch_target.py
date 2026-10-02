@@ -60,6 +60,9 @@ class TestPhoneViewport(unittest.TestCase):
     """A size raised only for phones counts; one raised only where a phone
     never renders does not."""
 
+    def test_a_root_variable_raised_for_phones_applies(self) -> None:
+        self.assertEqual(target("root-variable-phone"), [])
+
     def test_a_phone_width_raise_passes(self) -> None:
         self.assertEqual(target("phone-raise"), [])
 

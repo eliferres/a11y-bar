@@ -47,6 +47,9 @@ class TestRulePair(unittest.TestCase):
     def test_a_theme_override_of_a_root_variable_does_not_replace_the_default(self) -> None:
         self.assertEqual(contrast("theme-variable"), [])
 
+    def test_root_variables_inside_a_desktop_media_query_apply(self) -> None:
+        self.assertEqual(contrast("root-variable-desktop"), [])
+
     def test_a_root_custom_property_is_resolved(self) -> None:
         self.assertEqual(contrast("root-variable"),
                          [("root-variable.css", 2, ".q: 1.92:1 on 16px text, needs 4.5:1")])

@@ -100,14 +100,18 @@ def font_shorthand(value: str) -> Tuple[str, str]:
     return value, weight
 
 
-def root_variables(rules: List[Rule]) -> Dict[str, str]:
-    """Custom properties declared on a bare :root or html rule outside any
-    at-rule. A theme override (`:root[data-theme="dark"]`, a
-    prefers-color-scheme block) is a different rendering, and letting it win
-    by source order would measure the light theme with dark-theme colours."""
+def root_variables(rules: List[Rule], paints: Callable[[Rule], bool]) -> Dict[str, str]:
+    """Custom properties declared on a bare :root or html rule that paints at
+    the viewport `paints` judges, so a value raised inside a phone or desktop
+    media query applies where that query holds. A theme override
+    (`:root[data-theme="dark"]`, a prefers-color-scheme block) is a different
+    rendering, and letting it win by source order would measure the light
+    theme with dark-theme colours."""
     found: Dict[str, str] = {}
     for r in rules:
-        if not r.at and r.selector.strip() in (":root", "html"):
+        if r.selector.strip() not in (":root", "html") or "prefers-color-scheme" in r.at.lower():
+            continue
+        if not r.at or paints(r):
             found.update({k: v for k, v in r.decls.items() if k.startswith("--")})
     return found
 

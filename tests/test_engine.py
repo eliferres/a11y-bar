@@ -63,7 +63,7 @@ class TestCssWalk(unittest.TestCase):
 
     def test_root_variables_survive_an_import_line(self) -> None:
         rules = a.css_rules('@import "tailwindcss";\n:root{--a:#999999;--b:#ffffff}')
-        self.assertEqual(a.root_variables(rules), {"--a": "#999999", "--b": "#ffffff"})
+        self.assertEqual(a.root_variables(rules, lambda r: True), {"--a": "#999999", "--b": "#ffffff"})
 
     def test_a_semicolon_inside_supports_parentheses_is_kept(self) -> None:
         rules = a.css_rules("@supports (background: url(a;b)){ .q{color:#999} }")

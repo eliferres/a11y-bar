@@ -1,0 +1,5 @@
+:root{--fs:14px;--fg:#eeeeee}
+@media (min-width:1024px){:root{--fs:24px}}
+@media (min-width:1px){:root{--fg:#949494}}
+body{background:#ffffff}
+.t{color:var(--fg);font-size:var(--fs)}

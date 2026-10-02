@@ -418,9 +418,11 @@ def scan(css_files: List[Source], markup_files: List[Source],
             sheets += [(src.shown, strip_comments(css), line) for line, css in style_blocks(markup)]
 
     sheet_rules = [(shown, css_rules(text, first), text, first) for shown, text, first in sheets]
-    variables: Dict[str, str] = {}
+    variables: Dict[str, str] = {}                    # at the 1280px desktop
+    phone_variables: Dict[str, str] = {}              # at the 375px phone
     for _shown, rules, _text, _first in sheet_rules:
-        variables.update(root_variables(rules))
+        variables.update(root_variables(rules, paints_at_desktop))
+        phone_variables.update(root_variables(rules, paints_on_phone))
     file_rules = [r for shown, rules, _t, _f in sheet_rules[:len(css_files)] for r in rules]
     all_rules = [r for _s, rules, _t, _f in sheet_rules for r in rules]
 
@@ -448,7 +450,7 @@ def scan(css_files: List[Source], markup_files: List[Source],
 
     for shown, el in interactive:
         keys = {el.tag} | {"." + c for c in el.classes}
-        height = target_height(keys, all_rules, variables)
+        height = target_height(keys, all_rules, phone_variables)
         if height is None and _user_agent_sized(el):
             continue                                  # WCAG 2.5.8 user-agent exception
         if height is None or height < min_target:
