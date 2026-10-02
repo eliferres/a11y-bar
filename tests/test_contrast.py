@@ -29,6 +29,10 @@ class TestRulePair(unittest.TestCase):
         self.assertEqual(contrast("pair-fail"),
                          [("pair-fail.css", 1, ".q: 2.85:1 on 16px text, needs 4.5:1")])
 
+    def test_a_ratio_a_hair_under_the_minimum_fails_and_is_not_shown_rounded_up(self) -> None:
+        self.assertEqual(contrast("just-under"),
+                         [("just-under.css", 1, ".q: 4.49:1 on 16px text, needs 4.5:1")])
+
     def test_dark_grey_on_white_passes(self) -> None:
         self.assertEqual(contrast("pair-pass"), [])
 

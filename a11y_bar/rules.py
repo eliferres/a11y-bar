@@ -1,6 +1,7 @@
 """The six rules and the scan that runs them over a set of files."""
 from __future__ import annotations
 
+import math
 import os
 import re
 from typing import Callable, Dict, List, NamedTuple, Optional, Set, Tuple
@@ -45,7 +46,10 @@ def required_ratio(size: float, bold: bool) -> float:
 
 
 def _contrast_message(ratio: float, size: float, bold: bool, need: float) -> str:
-    return "%.2f:1 on %.0fpx%s text, needs %.1f:1" % (ratio, size, " bold" if bold else "", need)
+    shown = round(ratio, 2)
+    if shown >= need:                     # a failing 4.499:1 is shown as 4.49:1, never 4.50:1
+        shown = math.floor(ratio * 100) / 100
+    return "%.2f:1 on %.0fpx%s text, needs %.1f:1" % (shown, size, " bold" if bold else "", need)
 
 
 def check_contrast_pairs(path: str, rules: List[Rule], variables: Dict[str, str],
@@ -70,7 +74,7 @@ def check_contrast_pairs(path: str, rules: List[Rule], variables: Dict[str, str]
             bold = True
         need = required_ratio(size, bold)
         ratio = contrast_ratio(over(fg, bg[:3]), bg[:3])
-        if ratio + 0.005 < need:
+        if ratio < need:
             reported.add(r.selector)
             add("contrast", path, r.line, "%s: %s" % (r.selector, _contrast_message(ratio, size, bold, need)))
 
@@ -164,7 +168,7 @@ def check_contrast_inherited(path: str, markup: Markup, rules: List[Rule], varia
             continue                                  # the first pass already reported this rule
         need = required_ratio(size, bold)
         ratio = contrast_ratio(over(fg, bg[:3]), bg[:3])
-        if ratio + 0.005 >= need:
+        if ratio >= need:
             continue
         message = "%s (inherited): %s" % (el.label(), _contrast_message(ratio, size, bold, need))
         if (el.label(), message) in seen:
