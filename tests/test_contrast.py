@@ -33,6 +33,9 @@ class TestRulePair(unittest.TestCase):
         self.assertEqual(contrast("just-under"),
                          [("just-under.css", 1, ".q: 4.49:1 on 16px text, needs 4.5:1")])
 
+    def test_a_rule_whose_font_size_cannot_be_read_is_skipped(self) -> None:
+        self.assertEqual(contrast("pair-unreadable-size"), [])
+
     def test_dark_grey_on_white_passes(self) -> None:
         self.assertEqual(contrast("pair-pass"), [])
 

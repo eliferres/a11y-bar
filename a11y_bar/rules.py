@@ -66,12 +66,12 @@ def check_contrast_pairs(path: str, rules: List[Rule], variables: Dict[str, str]
         bg = parse_color(raw_bg, variables)
         if not fg or not bg or bg[3] < 1.0:   # a translucent background has no known backdrop
             continue
-        size, bold = font_size_and_weight(r.decls, variables)
         heading = _heading_default(r.selector)
-        if heading is not None and "font-size" not in r.decls:
-            size = heading
-        if heading is not None and "font-weight" not in r.decls:
-            bold = True
+        raw_size = r.decls.get("font-size")
+        size = (heading or 16.0) if raw_size is None else px(raw_size, variables)
+        if size is None:
+            continue                          # 2em, 150%, var(--f), font: menu: unknown, never 16px
+        bold = is_bold(r.decls.get("font-weight")) or (heading is not None and "font-weight" not in r.decls)
         need = required_ratio(size, bold)
         ratio = contrast_ratio(over(fg, bg[:3]), bg[:3])
         if ratio < need:
