@@ -85,42 +85,120 @@ class Markup(HTMLParser):
             self.stack[-1].text += data
 
 
-def mask_jsx(text: str) -> str:
-    """JSX with every attribute expression made safe for an HTML parser.
+IDENTIFIER_END = re.compile(r"[\w$)\]]")
 
-    Inside a tag, a brace expression such as onClick={() => go(a, b)} carries
-    a `>` that would end the tag early and spaces that would split it into
-    stray attributes. Those characters are replaced with "_" inside
-    tag-level braces only, at the same length and with newlines kept, so line
-    numbers still match the source. Children expressions outside tags are
-    left alone, so an <img> inside {items.map(...)} is still seen.
+
+def _string_end(text: str, i: int) -> int:
+    """The index just past the string literal opening at i."""
+    quote, j, n = text[i], i + 1, len(text)
+    while j < n:
+        if text[j] == "\\":
+            j += 2
+            continue
+        if text[j] == quote:
+            return j + 1
+        if text[j] == "\n" and quote != "`":
+            return j
+        j += 1
+    return n
+
+
+def mask_jsx(text: str) -> str:
+    """A .jsx or .tsx file made safe for an HTML parser, at the same length
+    and with every newline kept, so line numbers still match the source.
+
+    The file is walked with a small mode stack (JavaScript, a JSX tag, JSX
+    children, a tag's attribute expression) because the same character means
+    different things in each:
+
+    - In JavaScript, comments and the contents of string literals are blanked,
+      so markup quoted in a string or commented out is not read. A `<` right
+      after an identifier, `)` or `]` is a comparison or a type parameter
+      (`a<b`, `useState<string>`), not a tag, and is blanked so the parser
+      does not open a tag there and swallow the JSX after it.
+    - In an attribute expression such as onClick={() => go(a > b)}, `<`, `>`
+      and spaces are replaced with "_", so the expression neither ends the
+      tag early nor splits into stray attributes.
+    - JSX children are left alone: an apostrophe in text is not a string, and
+      an <img> inside {items.map(...)} is still a tag.
     """
     out = list(text)
-    i, n = 0, len(text)
+    n = len(text)
+    stack = ["js"]
+    tag_starts: List[int] = []
+    i = 0
+
+    def blank(a: int, b: int, fill: str = " ", only: str = "") -> None:
+        for k in range(a, b):
+            if out[k] != "\n" and (not only or out[k] in only):
+                out[k] = fill
+
     while i < n:
-        if text[i] == "<" and i + 1 < n and text[i + 1].isalpha():
-            depth, quote = 0, None
-            i += 1
-            while i < n:
-                c = text[i]
-                if depth == 0:
-                    if quote:
-                        if c == quote:
-                            quote = None
-                    elif c in "\"'":
-                        quote = c
-                    elif c == "{":
-                        depth = 1
-                    elif c == ">":
-                        break
+        mode, c = stack[-1], text[i]
+        nxt = text[i + 1] if i + 1 < n else ""
+        if mode in ("js", "attr"):
+            if c in "\"'`":
+                j = _string_end(text, i)
+                if mode == "js":
+                    blank(i + 1, j - 1)
                 else:
-                    if c == "{":
-                        depth += 1
-                    elif c == "}":
-                        depth -= 1
-                    elif c in "<> \t":
-                        out[i] = "_"
-                i += 1
+                    blank(i, j, "_", "<> \t")
+                i = j
+                continue
+            if c == "/" and nxt in "/*":
+                if nxt == "/":
+                    j = text.find("\n", i)
+                    j = n if j < 0 else j
+                else:
+                    j = text.find("*/", i + 2)
+                    j = n if j < 0 else j + 2
+                blank(i, j, "_" if mode == "attr" else " ")
+                i = j
+                continue
+            if c == "{":
+                stack.append(mode)
+            elif c == "}":
+                if len(stack) > 1:
+                    stack.pop()
+            elif mode == "attr":
+                if c in "<> \t":
+                    out[i] = "_"
+            elif c == "<" and (nxt.isalpha() or nxt == ">"):
+                if i > 0 and IDENTIFIER_END.match(text[i - 1]):
+                    out[i] = " "
+                elif nxt == ">":
+                    stack.append("text")                 # <> fragment
+                    i += 2
+                    continue
+                else:
+                    stack.append("tag")
+                    tag_starts.append(i)
+        elif mode == "tag":
+            if c in "\"'":
+                i = _string_end(text, i)
+                continue
+            if c == "{":
+                stack.append("attr")
+            elif c == ">":
+                stack.pop()
+                start = tag_starts.pop()
+                if text[i - 1] == "/":
+                    pass                                 # self-closing: no children
+                elif text[start + 1] == "/":
+                    if stack[-1] == "text":
+                        stack.pop()                      # the element ends here
+                else:
+                    stack.append("text")
+        else:                                            # JSX children
+            if c == "{":
+                stack.append("js")
+            elif c == "<" and (nxt == "/" or nxt.isalpha()):
+                stack.append("tag")
+                tag_starts.append(i)
+            elif c == "<" and nxt == ">":
+                stack.append("text")
+                i += 2
+                continue
         i += 1
     return "".join(out)
 

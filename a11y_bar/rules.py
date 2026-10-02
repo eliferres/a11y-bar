@@ -232,6 +232,8 @@ def _has_attr(el: Element, *names: str) -> bool:
 
 def check_alt(path: str, markup: Markup, add: AddFn) -> None:
     for el in markup.elements:
+        if any(name.startswith("{") for name in el.attrs):
+            continue                          # a JSX spread may carry the name
         if el.tag == "img":
             role = (literal(el.attrs.get("role")) or "").lower()
             if _has_attr(el, "alt", "aria-label", "aria-labelledby", "title") or role in ("presentation", "none"):

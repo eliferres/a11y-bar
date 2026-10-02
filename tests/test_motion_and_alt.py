@@ -49,6 +49,18 @@ class TestAlt(unittest.TestCase):
         self.assertEqual(check("alt", "video-alt", "alt"),
                          [("video-alt.html", 2, "<video> has no aria-label and is not aria-hidden")])
 
+    def test_a_comparison_before_jsx_does_not_swallow_the_image(self) -> None:
+        self.assertEqual(check("alt", "comparison", "alt"), [("comparison.jsx", 3, "<img> has no alt text")])
+
+    def test_markup_inside_js_comments_and_strings_is_not_read(self) -> None:
+        self.assertEqual(check("alt", "comments-and-strings", "alt"), [])
+
+    def test_an_apostrophe_in_jsx_text_is_not_a_string(self) -> None:
+        self.assertEqual(check("alt", "apostrophe", "alt"), [("apostrophe.jsx", 2, "<img> has no alt text")])
+
+    def test_an_image_with_spread_props_is_skipped(self) -> None:
+        self.assertEqual(check("alt", "spread", "alt"), [])
+
     def test_jsx_inside_a_map_is_read_and_an_expression_alt_counts(self) -> None:
         self.assertEqual(check("alt", "components", "alt"), [("components.jsx", 3, "<img> has no alt text")])
 
