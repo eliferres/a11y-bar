@@ -42,7 +42,7 @@ FAIL: 6 finding(s), 2 file(s) read, 6 rules
 |---|---|---|
 | `contrast` | Text must have a contrast ratio of at least 4.5:1 against its background, or 3:1 for large text (24px, or 18.67px bold) | 1.4.3 Contrast (Minimum), AA |
 | `focus-visible` | A page with buttons, inputs or button-styled links must have a `:focus-visible` rule, and must not remove the outline with `outline: none` or `outline: 0` unless such a rule replaces it | 2.4.7 Focus Visible, AA |
-| `touch-target` | Buttons, inputs and links styled as buttons must be at least 24px tall on a phone | 2.5.8 Target Size (Minimum), AA |
+| `touch-target` | Buttons, inputs and links styled as buttons (an `<a>` with a class containing `btn` or `pill`) must be at least 24px tall on a phone | 2.5.8 Target Size (Minimum), AA |
 | `reduced-motion` | Stylesheets with a transition or animation must include a `@media (prefers-reduced-motion: reduce)` block | 2.3.3 Animation from Interactions, AAA |
 | `focus-order` | Elements should not have a `tabindex` greater than zero | 2.4.3 Focus Order, A |
 | `alt` | Images must have alternate text (`alt`, `aria-label`, `aria-labelledby`, `title`, or a presentation role); videos must have an accessible name or be `aria-hidden` | 1.1.1 Non-text Content, A |
@@ -84,7 +84,7 @@ In CI:
 
 ## How it works
 
-**Two viewports.** Contrast and focus are judged at a 1280px desktop: a rule inside a `@media` block that does not hold at 1280px is left out, so a font size meant only for a 359px phone cannot decide the desktop verdict. Touch targets are judged at a 375px phone, because a thumb is what the rule protects. A button styled 40px tall with `@media (max-width: 599px) { height: 44px }` was once reported as too small because every rule ran at desktop width; the target rule now merges only the rules a 375px phone renders, and counts a `pointer: coarse` or `hover: none` query as a phone at any width.
+**Two viewports.** Contrast and focus are judged at a 1280px desktop: a rule inside a `@media` block that does not hold at 1280px is left out, so a font size meant only for a 359px phone cannot decide the desktop verdict. Touch targets are judged at a 375px phone, because a thumb is what the rule protects. Held to a 44px bar, a button styled 40px tall with `@media (max-width: 599px) { height: 44px }` was once reported as too small because every rule ran at desktop width; the target rule now merges only the rules a 375px phone renders, and counts a `pointer: coarse` or `hover: none` query as a phone at any width.
 
 **Inherited contrast.** Matching a rule's own `color` and `background` found 7 of 462 rules on one real stylesheet, because pages put the background on a wrapper and the colour on the text. A second pass parses each HTML page into an element tree and resolves every text element's colour, background, font size and weight through its ancestors, with a simplified cascade: rules ordered by specificity, the later one winning a tie. Colour inherits; background does not, so the walk stops at the nearest ancestor that paints one.
 
@@ -103,7 +103,7 @@ a11y-bar complements a browser audit; it does not replace one. Run axe-core or L
 - **Overlapping elements.** Text over an image, a sticky header that covers the focused control (WCAG 2.4.11 Focus Not Obscured), and anything decided by z-order or layout need a rendered page.
 - **Non-text contrast.** Only text contrast is measured. The 3:1 contrast of input borders, icons and focus rings (WCAG 1.4.11) is not.
 - **Target size is height only.** Width and the spacing exception in 2.5.8 are not evaluated, and a `vw` length is resolved at 1280px even in the phone pass.
-- **Presence, not quality.** `focus-visible` asks whether a `:focus-visible` rule exists, not whether every control gets a visible ring; `reduced-motion` asks whether a reduce block exists, not whether it covers each animation; `alt="image"` passes.
+- **Presence, not quality.** `focus-visible` asks whether a `:focus-visible` rule exists, not whether every control gets a visible ring, and a page that draws its ring with `:focus` alone is reported even though WCAG 2.4.7 accepts it; `reduced-motion` asks whether a reduce block exists, not whether it covers each animation; `alt="image"` passes.
 - **Colour names.** Hex, `rgb()`, `rgba()` and `var()` references to them are read; of the named colours only `white` and `black` are.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) to report a wrong finding or propose a rule. MIT licensed, see [LICENSE](LICENSE).
