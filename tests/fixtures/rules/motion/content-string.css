@@ -1,0 +1,2 @@
+.a{transition:opacity 300ms ease-out}
+.b::after{content:"prefers-reduced-motion"}

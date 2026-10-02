@@ -8,7 +8,7 @@ from typing import Callable, Dict, List, NamedTuple, Optional, Set, Tuple
 
 from .colour import contrast_ratio, over, parse_color
 from .css import (Rule, background_color, css_rules, font_size_and_weight, is_bold, paints_at_desktop,
-                  paints_on_phone, px, root_variables, strip_comments)
+                  paints_on_phone, px, root_variables, split_args, strip_comments, substitute_vars)
 from .markup import (Element, Markup, could_match, literal, may_match, parse_markup, parse_selector,
                      selector_matches, style_blocks)
 
@@ -247,13 +247,22 @@ def _inline_style_could_paint(el: Element) -> bool:
 def check_focus_order(path: str, markup: Markup, add: AddFn) -> None:
     for el in markup.elements:
         value = literal(el.attrs.get("tabindex"))
-        if value is not None and re.fullmatch(r"-?\d+", value) and int(value) > 0:
+        if value is not None and re.fullmatch(r"[+-]?\d+", value) and int(value) > 0:
             add("focus-order", path, el.line,
                 "<%s tabindex=\"%s\"> moves it ahead of the document order" % (el.tag, value))
 
 
-def _has_attr(el: Element, *names: str) -> bool:
-    return any(name in el.attrs for name in names)
+def _named(el: Element, *names: str) -> bool:
+    """Whether one of these attributes gives a non-empty name. A JSX
+    expression counts, since its value only exists at runtime."""
+    for name in names:
+        raw = el.attrs.get(name)
+        if raw is None:
+            continue
+        value = literal(raw)
+        if value is None or value.strip():
+            return True
+    return False
 
 
 def check_alt(path: str, markup: Markup, add: AddFn) -> None:
@@ -262,12 +271,17 @@ def check_alt(path: str, markup: Markup, add: AddFn) -> None:
             continue                          # a JSX spread may carry the name
         if el.tag == "img":
             role = (literal(el.attrs.get("role")) or "").lower()
-            if _has_attr(el, "alt", "aria-label", "aria-labelledby", "title") or role in ("presentation", "none"):
+            # alt="" is the standard mark of a decorative image; an empty aria-label names nothing.
+            if "alt" in el.attrs or _named(el, "aria-label", "aria-labelledby", "title") \
+                    or role in ("presentation", "none"):
                 continue
             add("alt", path, el.line, "<img> has no alt text")
+        elif el.tag == "input" and (literal(el.attrs.get("type")) or "").lower() == "image":
+            if not _named(el, "alt", "aria-label", "aria-labelledby", "title"):
+                add("alt", path, el.line, '<input type="image"> has no alt text')
         elif el.tag == "video":
             hidden = (literal(el.attrs.get("aria-hidden")) or "").lower() == "true"
-            if hidden or _has_attr(el, "aria-label", "aria-labelledby", "title"):
+            if hidden or _named(el, "aria-label", "aria-labelledby", "title"):
                 continue                      # alt is not a <video> attribute and names nothing
             add("alt", path, el.line, "<video> has no aria-label and is not aria-hidden")
 
@@ -352,7 +366,23 @@ def _rule_targets(rule: Rule, keys: Set[str]) -> bool:
     return False
 
 
-MOTION = re.compile(r"(transition|animation)(-duration)?\s*:[^;}]*?(\d*\.?\d+)\s*(ms|s)\b")
+TIME = re.compile(r"(?<![\w.-])(\d*\.?\d+)(ms|s)\b", re.I)
+MOTION_PROPS = ("transition", "transition-duration", "animation", "animation-duration")
+
+
+def animates(rule: Rule, variables: Dict[str, str]) -> bool:
+    """Whether a rule sets a transition or animation with a duration above
+    zero. In each comma-separated item the first time is the duration, so
+    `opacity 0s 1s` (a delay alone) does not animate."""
+    for prop in MOTION_PROPS:
+        value = rule.decls.get(prop)
+        if not value:
+            continue
+        for item in split_args(substitute_vars(value, variables)):
+            times = TIME.findall(item)
+            if times and float(times[0][0]) > 0:
+                return True
+    return False
 
 
 # ---------- the scan ----------
@@ -422,11 +452,12 @@ def scan(css_files: List[Source], markup_files: List[Source],
             add("touch-target", shown, el.line,
                 "%s %s on a phone, needs %.0fpx" % (el.label(), got, min_target))
 
-    if not any("prefers-reduced-motion" in text for _s, _r, text, _f in sheet_rules):
-        for shown, _rules, text, first in sheet_rules:
-            m = next((m for m in MOTION.finditer(text) if float(m.group(3)) > 0), None)
-            if m:
-                add("reduced-motion", shown, first + text.count("\n", 0, m.start()),
+    has_fallback = any("prefers-reduced-motion" in r.at for r in all_rules)
+    if not has_fallback:
+        for shown, rules, _text, _first in sheet_rules:
+            moving = next((r for r in rules if animates(r, variables)), None)
+            if moving:
+                add("reduced-motion", shown, moving.line,
                     "CSS animates and no @media (prefers-reduced-motion: reduce) block exists")
                 break
 

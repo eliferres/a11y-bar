@@ -43,9 +43,9 @@ FAIL: 6 finding(s), 2 file(s) read, 6 rules
 | `contrast` | Text must have a contrast ratio of at least 4.5:1 against its background, or 3:1 for large text (24px, or 18.67px bold) | 1.4.3 Contrast (Minimum), AA |
 | `focus-visible` | A stylesheet that removes the focus outline (`outline: none` or `outline: 0`) must draw a replacement ring in a `:focus-visible` rule (outline, box-shadow or border) | 2.4.7 Focus Visible, AA |
 | `touch-target` | Buttons, inputs and links styled as buttons (an `<a>` with a class containing `btn` or `pill`) must be at least 24px tall on a phone; a button, checkbox or radio whose size the page never sets is exempt, as WCAG allows for user-agent sizing | 2.5.8 Target Size (Minimum), AA |
-| `reduced-motion` | Stylesheets with a transition or animation must include a `@media (prefers-reduced-motion: reduce)` block | 2.3.3 Animation from Interactions, AAA |
+| `reduced-motion` | Stylesheets with a transition or animation longer than zero must include a `prefers-reduced-motion` media query (`reduce` to turn motion off, or `no-preference` to turn it on) | 2.3.3 Animation from Interactions, AAA |
 | `focus-order` | Elements should not have a `tabindex` greater than zero | 2.4.3 Focus Order, A |
-| `alt` | Images must have alternate text (`alt`, `aria-label`, `aria-labelledby`, `title`, or a presentation role); videos must have an accessible name or be `aria-hidden` | 1.1.1 Non-text Content, A |
+| `alt` | Images must have alternate text (`alt`, which may be empty for a decorative image, a non-empty `aria-label`, `aria-labelledby` or `title`, or a presentation role); image buttons (`<input type="image">`) must have a non-empty name; videos must have an accessible name or be `aria-hidden` | 1.1.1 Non-text Content, A |
 
 Each finding is one line, `file:line: [rule] message`, sorted by file and line, and the last line is the verdict.
 

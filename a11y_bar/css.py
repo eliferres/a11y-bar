@@ -112,7 +112,19 @@ def root_variables(rules: List[Rule]) -> Dict[str, str]:
     return found
 
 
-def _split_args(expr: str) -> List[str]:
+def substitute_vars(value: str, variables: Dict[str, str]) -> str:
+    """value with each var(--name, fallback) replaced by its custom property
+    or its fallback, following references a few levels deep."""
+    pattern = re.compile(r"var\(\s*(--[\w-]+)\s*(?:,\s*([^()]*))?\)")
+    for _ in range(5):
+        replaced = pattern.sub(lambda m: variables.get(m.group(1), m.group(2) or ""), value)
+        if replaced == value:
+            break
+        value = replaced
+    return value
+
+
+def split_args(expr: str) -> List[str]:
     """The comma-separated arguments of a function body, split at depth zero."""
     args, depth, start = [], 0, 0
     for i, ch in enumerate(expr):
@@ -163,7 +175,7 @@ def px(value: Optional[str], variables: Optional[Dict[str, str]] = None,
         return px(variables.get(name), variables, allow_em, _depth + 1)
     m = re.fullmatch(r"(clamp|min|max)\((.*)\)", v)
     if m:
-        terms = [px(a, variables, allow_em, _depth + 1) for a in _split_args(m.group(2))]
+        terms = [px(a, variables, allow_em, _depth + 1) for a in split_args(m.group(2))]
         if any(t is None for t in terms):
             return None
         if m.group(1) == "clamp":

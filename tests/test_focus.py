@@ -26,6 +26,10 @@ class TestFocusOrder(unittest.TestCase):
                          [("tabindex-positive.html", 2,
                            '<button tabindex="3"> moves it ahead of the document order')])
 
+    def test_a_plus_signed_tabindex_is_positive(self) -> None:
+        self.assertEqual(check("focus", "tabindex-plus", "focus-order"),
+                         [("tabindex-plus.html", 2, '<div tabindex="+6"> moves it ahead of the document order')])
+
     def test_zero_and_minus_one_pass(self) -> None:
         self.assertEqual(check("focus", "tabindex-zero-and-negative", "focus-order"), [])
 

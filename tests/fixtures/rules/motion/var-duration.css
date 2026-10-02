@@ -1,0 +1,2 @@
+:root{--dur:200ms}
+.a{transition:opacity var(--dur) ease-out}

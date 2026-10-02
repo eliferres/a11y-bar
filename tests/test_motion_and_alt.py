@@ -31,6 +31,18 @@ class TestReducedMotion(unittest.TestCase):
     def test_a_zero_duration_is_not_motion(self) -> None:
         self.assertEqual(check("motion", "zero-duration", "reduced-motion"), [])
 
+    def test_a_duration_set_through_a_custom_property_is_motion(self) -> None:
+        self.assertEqual([f[1] for f in check("motion", "var-duration", "reduced-motion")], [2])
+
+    def test_a_delay_alone_is_not_motion(self) -> None:
+        self.assertEqual(check("motion", "delay-only", "reduced-motion"), [])
+
+    def test_any_transition_in_a_list_with_a_duration_is_motion(self) -> None:
+        self.assertEqual([f[1] for f in check("motion", "mixed-durations", "reduced-motion")], [1])
+
+    def test_the_words_in_a_content_string_are_not_a_fallback(self) -> None:
+        self.assertEqual([f[1] for f in check("motion", "content-string", "reduced-motion")], [1])
+
     def test_the_line_points_at_the_first_animated_declaration(self) -> None:
         self.assertEqual([f[1] for f in check("motion", "keyframes", "reduced-motion")], [3])
 
@@ -60,6 +72,13 @@ class TestAlt(unittest.TestCase):
 
     def test_an_image_with_spread_props_is_skipped(self) -> None:
         self.assertEqual(check("alt", "spread", "alt"), [])
+
+    def test_an_empty_name_is_no_name_and_an_image_button_needs_alt(self) -> None:
+        self.assertEqual(check("alt", "empty-names", "alt"), [
+            ("empty-names.html", 2, "<img> has no alt text"),
+            ("empty-names.html", 3, '<input type="image"> has no alt text'),
+            ("empty-names.html", 5, "<img> has no alt text"),
+        ])
 
     def test_jsx_inside_a_map_is_read_and_an_expression_alt_counts(self) -> None:
         self.assertEqual(check("alt", "components", "alt"), [("components.jsx", 3, "<img> has no alt text")])
