@@ -77,10 +77,13 @@ def css_rules(text: str, first_line: int = 1) -> List[Rule]:
 
 
 def root_variables(rules: List[Rule]) -> Dict[str, str]:
-    """Custom properties declared on :root or html."""
+    """Custom properties declared on a bare :root or html rule outside any
+    at-rule. A theme override (`:root[data-theme="dark"]`, a
+    prefers-color-scheme block) is a different rendering, and letting it win
+    by source order would measure the light theme with dark-theme colours."""
     found: Dict[str, str] = {}
     for r in rules:
-        if ":root" in r.selector or r.selector == "html":
+        if not r.at and r.selector.strip() in (":root", "html"):
             found.update({k: v for k, v in r.decls.items() if k.startswith("--")})
     return found
 

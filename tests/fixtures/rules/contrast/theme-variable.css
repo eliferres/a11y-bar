@@ -1,0 +1,5 @@
+:root{--fg:#111111}
+body{background:#ffffff}
+.t{color:var(--fg)}
+@media (prefers-color-scheme: dark){:root{--fg:#eeeeee}}
+:root[data-theme="dark"]{--fg:#eeeeee}

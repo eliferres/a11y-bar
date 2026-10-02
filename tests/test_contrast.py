@@ -40,6 +40,9 @@ class TestRulePair(unittest.TestCase):
     def test_bold_text_from_19px_counts_as_large(self) -> None:
         self.assertEqual(contrast("bold-text"), [])
 
+    def test_a_theme_override_of_a_root_variable_does_not_replace_the_default(self) -> None:
+        self.assertEqual(contrast("theme-variable"), [])
+
     def test_a_root_custom_property_is_resolved(self) -> None:
         self.assertEqual(contrast("root-variable"),
                          [("root-variable.css", 2, ".q: 1.92:1 on 16px text, needs 4.5:1")])
