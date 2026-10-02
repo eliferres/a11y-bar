@@ -45,6 +45,10 @@ class TestAlt(unittest.TestCase):
     def test_every_accepted_way_to_name_or_hide_media_passes(self) -> None:
         self.assertEqual(check("alt", "named", "alt"), [])
 
+    def test_alt_on_a_video_names_nothing(self) -> None:
+        self.assertEqual(check("alt", "video-alt", "alt"),
+                         [("video-alt.html", 2, "<video> has no aria-label and is not aria-hidden")])
+
     def test_jsx_inside_a_map_is_read_and_an_expression_alt_counts(self) -> None:
         self.assertEqual(check("alt", "components", "alt"), [("components.jsx", 3, "<img> has no alt text")])
 

@@ -770,8 +770,8 @@ def check_alt(path: str, markup: Markup, add: AddFn) -> None:
             add("alt", path, el.line, "<img> has no alt text")
         elif el.tag == "video":
             hidden = (literal(el.attrs.get("aria-hidden")) or "").lower() == "true"
-            if hidden or _has_attr(el, "alt", "aria-label", "aria-labelledby", "title"):
-                continue
+            if hidden or _has_attr(el, "aria-label", "aria-labelledby", "title"):
+                continue                      # alt is not a <video> attribute and names nothing
             add("alt", path, el.line, "<video> has no aria-label and is not aria-hidden")
 
 
