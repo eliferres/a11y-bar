@@ -1,0 +1,2 @@
+.a{transition:opacity 300ms ease-out}
+@media (prefers-reduced-motion: reduce){*{transition:none}}
