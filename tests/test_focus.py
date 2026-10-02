@@ -44,6 +44,22 @@ class TestFocusVisible(unittest.TestCase):
     def test_a_removed_outline_passes_when_a_focus_visible_rule_exists(self) -> None:
         self.assertEqual(check("focus", "ring", "focus-visible"), [])
 
+    def test_a_focus_visible_rule_that_removes_the_outline_is_no_ring(self) -> None:
+        self.assertEqual(check("focus", "ring-removed-again", "focus-visible"), [
+            ("ring-removed-again.css", 1, "button sets outline: none and no :focus-visible rule replaces it"),
+            ("ring-removed-again.css", 2,
+             "button:focus-visible sets outline: none and no :focus-visible rule replaces it"),
+        ])
+        self.assertEqual(check("focus", "universal-ring-removed", "focus-visible"), [
+            ("universal-ring-removed.css", 1,
+             "*:focus-visible sets outline: none and no :focus-visible rule replaces it"),
+        ])
+
+    def test_focus_visible_inside_not_is_no_ring(self) -> None:
+        self.assertEqual(check("focus", "ring-only-under-not", "focus-visible"), [
+            ("ring-only-under-not.css", 2, "button sets outline: 0 and no :focus-visible rule replaces it"),
+        ])
+
     def test_a_ring_in_a_style_block_counts_beside_a_stylesheet(self) -> None:
         self.assertEqual(check("focus", "ring-in-style-block", "focus-visible"), [])
 

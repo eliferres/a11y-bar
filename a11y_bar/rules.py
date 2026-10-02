@@ -140,6 +140,42 @@ def check_contrast_inherited(path: str, markup: Markup, rules: List[Rule], varia
         add("contrast", path, el.line, message)
 
 
+NOT_PAINTED = {"none", "hidden", "0", "0px"}
+NOT_CLAUSE = re.compile(r":not\([^()]*\)")
+
+
+def _paints(prop: str, value: str) -> bool:
+    """Whether an outline, border or box-shadow value draws anything."""
+    v = value.lower().replace("!important", "").strip()
+    if not v:
+        return False
+    if prop == "box-shadow":
+        return v != "none"
+    return not any(tok in NOT_PAINTED for tok in v.split())
+
+
+def draws_focus_ring(rule: Rule) -> bool:
+    """A rule that targets :focus-visible (outside any :not()) and draws a
+    visible outline, box-shadow or border there."""
+    if not any(":focus-visible" in NOT_CLAUSE.sub("", one) for one in rule.selector.split(",")):
+        return False
+    return any(_paints(prop, value) for prop, value in rule.decls.items()
+               if prop in ("outline", "outline-style", "box-shadow") or prop.startswith("border"))
+
+
+def removed_outline(rule: Rule) -> Optional[str]:
+    """The value of an outline this rule removes, or None. A removal scoped
+    to :not(:focus-visible) only hides the ring from pointer users and keeps
+    it for the keyboard, so it does not count."""
+    for prop in ("outline", "outline-style"):
+        value = (rule.decls.get(prop) or "").strip().lower()
+        if value and not _paints("outline", value):
+            if all(":not(:focus-visible)" in one.replace(" ", "") for one in rule.selector.split(",")):
+                return None
+            return value
+    return None
+
+
 def check_focus_order(path: str, markup: Markup, add: AddFn) -> None:
     for el in markup.elements:
         value = literal(el.attrs.get("tabindex"))
@@ -291,7 +327,7 @@ def scan(css_files: List[Source], markup_files: List[Source],
             own = [r for _l, css in style_blocks(markup) for r in css_rules(strip_comments(css))]
             check_contrast_inherited(src.shown, markup, file_rules + own, variables, reported, add)
 
-    has_ring = any(":focus-visible" in text for _s, _r, text, _f in sheet_rules)
+    has_ring = any(draws_focus_ring(r) for _s, rules, _t, _f in sheet_rules for r in rules)
     if not has_ring:
         if interactive:
             shown, el = interactive[0]
@@ -299,8 +335,8 @@ def scan(css_files: List[Source], markup_files: List[Source],
                 "%d interactive element(s) and no :focus-visible rule in the CSS" % len(interactive))
         for shown, rules, _text, _first in sheet_rules:
             for r in rules:
-                outline = (r.decls.get("outline") or "").strip().lower()
-                if outline in ("none", "0") and paints_at_desktop(r, variables):
+                outline = removed_outline(r)
+                if outline and paints_at_desktop(r, variables):
                     add("focus-visible", shown, r.line,
                         "%s sets outline: %s and no :focus-visible rule replaces it" % (r.selector, outline))
 
