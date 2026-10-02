@@ -31,6 +31,10 @@ def _walk(directory: str) -> List[str]:
     return found
 
 
+def is_project_root(paths: List[str]) -> bool:
+    return len(paths) == 1 and os.path.isdir(os.path.join(paths[0], "out"))
+
+
 def collect(paths: List[str]) -> Tuple[List[Source], List[Source]]:
     """(stylesheets, markup files) to read for the given paths.
 
@@ -40,7 +44,7 @@ def collect(paths: List[str]) -> Tuple[List[Source], List[Source]]:
     bare <img> in a component is caught even when out/ is stale. Any other
     path is read as given, a directory recursively.
     """
-    if len(paths) == 1 and os.path.isdir(os.path.join(paths[0], "out")):
+    if is_project_root(paths):
         root = paths[0]
         pairs = [(f, True) for f in _walk(os.path.join(root, "out"))]
         for name in SOURCE_DIRS:
@@ -87,11 +91,17 @@ def check_scope(css: List[Source], markup: List[Source], paths: List[str]) -> No
     no CSS still gets the browser's default focus ring), and no rule can be
     decided without markup, so either half missing is a usage error.
     """
-    where = ", ".join(paths)
+    if is_project_root(paths):
+        why = (" under %s, which is read as a project root because it holds out/; "
+               "pass the folders to check instead" % paths[0])
+        markup_where = "out/, src/, app/ or components/" + why
+        css_where = "out/" + why
+    else:
+        markup_where = css_where = ", ".join(paths)
     if not markup:
-        raise UsageError("no .html, .htm, .jsx or .tsx files found in %s" % where)
+        raise UsageError("no .html, .htm, .jsx or .tsx files found in %s" % markup_where)
     if not css and not any(_has_style_block(m) for m in markup):
-        raise UsageError("no CSS found in %s (no .css file and no <style> block)" % where)
+        raise UsageError("no CSS (no .css file and no <style> block) found in %s" % css_where)
 
 
 def _positive_px(value: str) -> float:

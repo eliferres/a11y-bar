@@ -88,19 +88,27 @@ class TestNothingToRead(unittest.TestCase):
         r = run("markup-only")
         self.assertEqual(r.returncode, 2)
         self.assertEqual(r.stderr,
-                         "a11y-bar: no CSS found in markup-only (no .css file and no <style> block)\n")
+                         "a11y-bar: no CSS (no .css file and no <style> block) found in markup-only\n")
+
+    def test_a_project_root_says_which_folders_it_searched_and_why(self) -> None:
+        r = run("unrelated-out")
+        self.assertEqual(r.returncode, 2)
+        self.assertEqual(r.stderr,
+                         "a11y-bar: no .html, .htm, .jsx or .tsx files found in out/, src/, app/ or "
+                         "components/ under unrelated-out, which is read as a project root because it "
+                         "holds out/; pass the folders to check instead\n")
 
     def test_a_style_block_with_no_rule_in_it_is_not_css(self) -> None:
         for name in ("comment-style", "import-style"):
             with self.subTest(name=name):
                 r = run(name)
                 self.assertEqual(r.returncode, 2)
-                self.assertIn("no CSS found", r.stderr)
+                self.assertIn("no CSS (no .css file and no <style> block) found in", r.stderr)
 
     def test_a_style_tag_quoted_inside_a_tsx_string_is_not_css(self) -> None:
         r = run("tsx-style-string")
         self.assertEqual(r.returncode, 2)
-        self.assertIn("no CSS found", r.stderr)
+        self.assertIn("no CSS (no .css file and no <style> block) found in", r.stderr)
 
 
 class TestWhatIsRead(unittest.TestCase):
