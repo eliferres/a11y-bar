@@ -1,0 +1,11 @@
+# LEVEL — P11 stack law v3 (0 probe, 1 owned product, 2 connected system, 3 platform)
+# Replace every <...> with the real place or mechanism, or "n/a: <why this control is not truly necessary here>".
+level: 1
+owner: Eli Ferres
+monitor: GitHub Actions on every push
+rollback: git revert and re-tag
+migrations: n/a: a stateless CLI with no database or stored data
+backups: n/a: a stateless CLI with no database or stored data
+authz: n/a: no trust boundary, a local CLI
+# level 2 adds: jobs, idempotency, logs, alerts, reconciliation, deadletter, runbook
+# level 3 adds: iac, slo, dr, provenance
