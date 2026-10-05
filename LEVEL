@@ -1,4 +1,4 @@
-# LEVEL — P11 stack law v3 (0 probe, 1 owned product, 2 connected system, 3 platform)
+# What this project is responsible for, and what happens when it breaks.
 # Replace every <...> with the real place or mechanism, or "n/a: <why this control is not truly necessary here>".
 level: 1
 owner: Eli Ferres
