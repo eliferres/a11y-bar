@@ -71,6 +71,14 @@ class TestExitCodes(unittest.TestCase):
         self.assertEqual(stop.exception.code, 2)
         self.assertRegex(err.getvalue(), r"^a11y-bar: cannot parse .*index\.html: unreadable\n$")
 
+    def test_an_unexpected_error_is_one_line_and_exit_2(self) -> None:
+        err = io.StringIO()
+        with mock.patch("a11y_bar.cli.scan", side_effect=RuntimeError("something broke")), \
+                contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as stop:
+            a11y_bar.main([str(FIXTURES / "clean")])
+        self.assertEqual(stop.exception.code, 2)
+        self.assertEqual(err.getvalue(), "a11y-bar: internal error: RuntimeError: something broke\n")
+
     def test_version_prints_the_command_name_and_version(self) -> None:
         r = run("--version")
         self.assertEqual((r.returncode, r.stdout), (0, "a11y-bar 0.1.0\n"))

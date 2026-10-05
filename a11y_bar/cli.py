@@ -161,6 +161,9 @@ def main(argv: Optional[List[str]] = None) -> None:
     except (UsageError, OSError, MarkupError) as e:
         print("a11y-bar: %s" % e, file=sys.stderr)
         sys.exit(2)
+    except Exception as e:   # a bug must still end in one line and exit 2, never a traceback
+        print("a11y-bar: internal error: %s: %s" % (type(e).__name__, e), file=sys.stderr)
+        sys.exit(2)
     shown = [s.shown for s in css + markup]
     print(render_json(findings, shown) if args.json else render_text(findings, len(shown)))
     sys.exit(1 if findings else 0)
