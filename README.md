@@ -11,7 +11,7 @@ a11y-bar reads a web project's CSS and its HTML, JSX and TSX source and reports 
 
 ## What it does
 
-a11y-bar reads a web project's CSS and its HTML, JSX and TSX source and reports the WCAG 2.2 failures that can be decided from those files without a browser: low text contrast, a missing focus ring, undersized buttons, motion with no reduced-motion fallback, positive tabindex, and images with no text alternative. It needs no browser and no network, so it can run on every commit, long before a page is deployed where a browser audit could reach it.
+It reports: low text contrast, a missing focus ring, undersized buttons, motion with no reduced-motion fallback, positive tabindex, and images with no text alternative. It needs no browser and no network, so it can run on every commit, long before a page is deployed where a browser audit could reach it.
 
 ## Install and first run
 
