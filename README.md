@@ -1,6 +1,6 @@
 # a11y-bar
 
-a11y-bar reads a web project's CSS and its HTML, JSX and TSX source and reports the WCAG 2.2 failures that can be decided from those files without a browser: low text contrast, a missing focus ring, undersized buttons, motion with no reduced-motion fallback, positive tabindex, and images with no text alternative. It needs no browser and no network, so it can run on every commit, long before a page is deployed where a browser audit could reach it.
+a11y-bar reads a web project's CSS and its HTML, JSX and TSX source and reports the WCAG 2.2 failures that can be decided from those files without a browser.
 
 [![ci](https://github.com/eliferres/a11y-bar/actions/workflows/ci.yml/badge.svg)](https://github.com/eliferres/a11y-bar/actions/workflows/ci.yml)
 ![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -8,6 +8,10 @@ a11y-bar reads a web project's CSS and its HTML, JSX and TSX source and reports 
 ![dependencies: none](https://img.shields.io/badge/dependencies-none-brightgreen.svg)
 
 <img src="demo/terminal.svg" width="660" alt="Terminal session: a11y-bar reports six findings on a demo page that plants one violation per rule and exits 1, passes the clean demo page with exit 0, lists the WCAG criterion of each finding from its JSON output, and exits 2 when given a stylesheet with no markup.">
+
+## What it does
+
+a11y-bar reads a web project's CSS and its HTML, JSX and TSX source and reports the WCAG 2.2 failures that can be decided from those files without a browser: low text contrast, a missing focus ring, undersized buttons, motion with no reduced-motion fallback, positive tabindex, and images with no text alternative. It needs no browser and no network, so it can run on every commit, long before a page is deployed where a browser audit could reach it.
 
 ## Install and first run
 
