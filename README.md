@@ -9,6 +9,8 @@ a11y-bar reads a web project's CSS and its HTML, JSX and TSX source and reports 
 
 <img src="demo/terminal.svg" width="660" alt="Terminal session: a11y-bar reports six findings on a demo page that plants one violation per rule and exits 1, passes the clean demo page with exit 0, lists the WCAG criterion of each finding from its JSON output, and exits 2 when given a stylesheet with no markup.">
 
+The [fde-agent-skills](https://github.com/eliferres/fde-agent-skills) library documents the working methods behind this tool and its sibling tools as agent skills.
+
 ## What it does
 
 It reports: low text contrast, a missing focus ring, undersized buttons, motion with no reduced-motion fallback, positive tabindex, and images with no text alternative. It needs no browser and no network, so it can run on every commit, long before a page is deployed where a browser audit could reach it.
